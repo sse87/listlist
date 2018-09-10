@@ -26,7 +26,6 @@ class App extends Component {
     this.state = {
       items: [],
       isModalOpen: false,
-      addItems: '',
       sortingItem: null,
       textarea: ''
     }
