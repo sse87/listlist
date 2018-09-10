@@ -10,13 +10,13 @@ import {
   IconButton,
   MenuItem,
   Menu,
-  Checkbox
+  Checkbox,
+  Paper
 } from '@material-ui/core'
 import {
   Reorder as ReorderIcon,
   Delete as DeleteIcon
 } from '@material-ui/icons'
-import indigo from '@material-ui/core/colors/indigo'
 
 class ItemItem extends Component {
   constructor (props) {
@@ -34,10 +34,15 @@ class ItemItem extends Component {
   }
 
   render () {
-    const { item, onCheck, onDelete } = this.props
+    const { item, onCheck, onDelete, activeItem } = this.props
     const open = Boolean(this.state.anchorEl)
+    console.log(activeItem, activeItem ? 4 : 1)
     return (
-      <ListItem style={{ backgroundColor: indigo[100] }}>
+      <ListItem
+        className='mb-4'
+        component={Paper}
+        elevation={activeItem ? 4 : 1}
+      >
         <DragHandle />
         <ListItemText
           primary={
