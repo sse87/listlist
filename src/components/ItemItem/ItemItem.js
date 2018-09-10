@@ -46,7 +46,10 @@ class ItemItem extends Component {
         <DragHandle />
         <ListItemText
           primary={
-            <Fragment><Checkbox checked={item.checked} />{item.text}</Fragment>
+            <Fragment>
+              <Checkbox checked={item.checked} />
+              <span style={{ fontWeight: 'bold' }}>{item.text}</span>
+            </Fragment>
           }
           onClick={() => onCheck(item.id)}
         />

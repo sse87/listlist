@@ -27,7 +27,8 @@ class App extends Component {
       items: [],
       isModalOpen: false,
       addItems: '',
-      sortingItem: null
+      sortingItem: null,
+      textarea: ''
     }
 
     this.onSortStart = this.onSortStart.bind(this)
@@ -39,7 +40,7 @@ class App extends Component {
   }
 
   componentDidMount () {
-    this.syncItemsWithLocalStorage()
+    this.loadStateFromLocalStorage()
     // add event listener to save state to localStorage
     // when user leaves/refreshes the page
     window.addEventListener('beforeunload', this.saveStateToLocalStorage.bind(this))
@@ -51,8 +52,7 @@ class App extends Component {
     this.saveStateToLocalStorage()
   }
 
-  syncItemsWithLocalStorage () {
-    // get the key's value from localStorage
+  loadStateFromLocalStorage () {
     let value = localStorage.getItem('list')
 
     // parse the localStorage string and setState
@@ -64,7 +64,6 @@ class App extends Component {
 
   saveStateToLocalStorage () {
     localStorage.setItem('list', JSON.stringify(this.state.items))
-    // localStorage.setItem('list', null)
   }
 
   onSortStart ({ node, index }) {
@@ -118,15 +117,22 @@ class App extends Component {
           />
         </div>
         {this.state.isModalOpen === false &&
-          <FabAdd onClick={this.handleOpen} />
+          <Button
+            variant='fab'
+            color='primary'
+            aria-label='Add'
+            onClick={this.handleOpen}
+            style={{
+              position: 'fixed',
+              bottom: 26,
+              right: 26
+            }}
+          >
+            <AddIcon />
+          </Button>
         }
 
-        <Modal
-          aria-labelledby='simple-modal-title'
-          aria-describedby='simple-modal-description'
-          open={this.state.isModalOpen}
-          onClose={this.handleClose}
-        >
+        <Modal open={this.state.isModalOpen} onClose={this.handleClose}>
           <div style={{
             backgroundColor: '#fff',
             boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)',
@@ -136,23 +142,30 @@ class App extends Component {
             padding: 32
           }}>
             <Typography variant='title'>Add to list</Typography>
-            <Typography variant='subheading'>You can add many by spiting them into multiple lines</Typography>
+            <Typography variant='body2'>You can add many by spliting them into multiple lines</Typography>
             <TextField
-              rows='4'
+              rows='7'
               multiline
               fullWidth
-              onChange={(e) => this.setState({ addItems: e.target.value })}
-              value={this.state.addItems}
+              onChange={(e) => this.setState({ textarea: e.target.value })}
+              value={this.state.textarea}
             />
-            <Button className='mt-3' variant='contained' color='primary' onClick={() => {
-              const newItems = this.state.addItems.replace('\r', '').split('\n').map((str) => ({ id: makeId(), text: str, checked: false }))
-              const items = this.state.items.concat(newItems)
-              this.setState({
-                isModalOpen: false,
-                addItems: '',
-                items
-              })
-            }}>Add them</Button>
+            <div className='text-right'>
+              <Button className='mt-3' variant='contained' color='primary' onClick={() => {
+                const newItems = this.state.textarea.replace('\r', '').split('\n').map(strItem => ({
+                  id: makeId(),
+                  text: strItem,
+                  checked: false
+                }))
+                this.setState({
+                  items: [...this.state.items, ...newItems],
+                  isModalOpen: false,
+                  textarea: ''
+                })
+              }}>
+                Add them
+              </Button>
+            </div>
           </div>
         </Modal>
       </MuiThemeProvider>
@@ -162,78 +175,9 @@ class App extends Component {
 
 export default App
 
-const FabAdd = ({ onClick }) => (
-  <div style={{ position: 'fixed', bottom: 26, width: '100%' }}>
-    <div className='container' style={{ textAlign: 'center' }}>
-      <Button
-        variant='fab'
-        color='primary'
-        aria-label='Add'
-        onClick={onClick}
-        style={{ pointerEvents: 'auto' }}
-      >
-        <AddIcon />
-      </Button>
-    </div>
-  </div>
-)
-
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 const makeId = (length = 10) => (
   Array(length).join().split(',').map(() => (
     ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length))
   )).join('')
 )
-
-/*
-'Item 1',
-'Item 2',
-'Item 3',
-'Item 4',
-'Item 5',
-'Item 6',
-'Item 7',
-'Item 8',
-'Item 9',
-'Item 10',
-'Item 11',
-'Item 12',
-'Item 13',
-'Item 14',
-'Item 15',
-'Item 16',
-'Item 17',
-'Item 18',
-'Item 19',
-'Item 20',
-'Item 21',
-'Item 22',
-'Item 23',
-'Item 24',
-'Item 25',
-'Item 26',
-'Item 27',
-'Item 28',
-'Item 29',
-'Item 30',
-'Item 31',
-'Item 32',
-'Item 33',
-'Item 34',
-'Item 35',
-'Item 36',
-'Item 37',
-'Item 38',
-'Item 39',
-'Item 40',
-'Item 41',
-'Item 42',
-'Item 43',
-'Item 44',
-'Item 45',
-'Item 46',
-'Item 47',
-'Item 48',
-'Item 49',
-'Item 50'
-*/
