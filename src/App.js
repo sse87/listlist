@@ -25,8 +25,8 @@ class App extends Component {
 
     this.state = {
       items: [],
-      isModalOpen: false,
       sortingItem: null,
+      isModalOpen: false,
       textarea: ''
     }
 
@@ -65,7 +65,7 @@ class App extends Component {
     localStorage.setItem('list', JSON.stringify(this.state.items))
   }
 
-  onSortStart ({ node, index }) {
+  onSortStart ({ index }) {
     this.setState({ sortingItem: index })
   }
 

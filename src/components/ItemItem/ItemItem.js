@@ -34,7 +34,7 @@ class ItemItem extends Component {
   }
 
   render () {
-    const { item, onCheck, onDelete, activeItem } = this.props
+    const { item, activeItem, onCheck, onDelete } = this.props
     const open = Boolean(this.state.anchorEl)
 
     return (
@@ -54,7 +54,7 @@ class ItemItem extends Component {
           onClick={() => onCheck(item.id)}
         />
         <IconButton
-          aria-label='More'
+          aria-label='delete'
           aria-owns={open ? 'item-menu' : null}
           aria-haspopup='true'
           onClick={(e) => this.setState({ anchorEl: e.currentTarget })}
@@ -71,6 +71,7 @@ class ItemItem extends Component {
 
 ItemItem.propTypes = {
   item: PropTypes.object.isRequired,
+  activeItem: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired
 }

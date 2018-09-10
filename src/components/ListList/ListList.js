@@ -5,12 +5,12 @@ import List from '@material-ui/core/List'
 
 import ItemItem from '../ItemItem'
 
-const ListList = ({ items, onSortEnd, onSortStart, onCheck, onDelete, sortingItemIndex }) => {
+const ListList = ({ items, onSortStart, onSortEnd, onCheck, onDelete, sortingItemIndex }) => {
   return (
     <SortableList
       items={items}
-      onSortEnd={onSortEnd}
       onSortStart={onSortStart}
+      onSortEnd={onSortEnd}
       onCheck={onCheck}
       onDelete={onDelete}
       lockAxis='y'
@@ -23,9 +23,11 @@ const ListList = ({ items, onSortEnd, onSortStart, onCheck, onDelete, sortingIte
 
 ListList.propTypes = {
   items: PropTypes.arrayOf(PropTypes.object),
+  onSortStart: PropTypes.func.isRequired,
   onSortEnd: PropTypes.func.isRequired,
   onCheck: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired
+  onDelete: PropTypes.func.isRequired,
+  sortingItemIndex: PropTypes.number.isRequired
 }
 
 ListList.defaultProps = {
