@@ -25,10 +25,12 @@ class App extends Component {
 
     this.state = {
       items: [],
+      sortingItem: null,
       isModalOpen: false,
       textarea: ''
     }
 
+    this.onSortStart = this.onSortStart.bind(this)
     this.onSortEnd = this.onSortEnd.bind(this)
     this.onCheck = this.onCheck.bind(this)
     this.onDelete = this.onDelete.bind(this)
@@ -63,9 +65,13 @@ class App extends Component {
     localStorage.setItem('list', JSON.stringify(this.state.items))
   }
 
+  onSortStart ({ index }) {
+    this.setState({ sortingItem: index })
+  }
+
   onSortEnd ({ oldIndex, newIndex }) {
     const items = arrayMove(this.state.items, oldIndex, newIndex)
-    this.setState({ items })
+    this.setState({ items, sortingItem: null })
   }
 
   onCheck (id) {
@@ -94,7 +100,7 @@ class App extends Component {
   render () {
     return (
       <MuiThemeProvider theme={theme}>
-        <AppBar position='static'>
+        <AppBar position='static' className='mb-5'>
           <Toolbar>
             <Typography variant='title' color='inherit'>List List</Typography>
           </Toolbar>
@@ -105,6 +111,8 @@ class App extends Component {
             onSortEnd={this.onSortEnd}
             onCheck={this.onCheck}
             onDelete={this.onDelete}
+            onSortStart={this.onSortStart}
+            sortingItemIndex={this.state.sortingItem}
           />
         </div>
         {this.state.isModalOpen === false &&
