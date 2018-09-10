@@ -36,7 +36,7 @@ class ItemItem extends Component {
   render () {
     const { item, onCheck, onDelete, activeItem } = this.props
     const open = Boolean(this.state.anchorEl)
-    console.log(activeItem, activeItem ? 4 : 1)
+
     return (
       <ListItem
         className='mb-4'
