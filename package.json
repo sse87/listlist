@@ -6,6 +6,7 @@
     "name": "Sigurður Snær Eiríksson",
     "email": "sse1987@gmail.com"
   },
+  "homepage": "https://sse87.github.io/listlist",
   "dependencies": {
     "@material-ui/core": "^3.0.1",
     "@material-ui/icons": "^3.0.1",
@@ -16,11 +17,14 @@
     "react-sortable-hoc": "^0.8.3"
   },
   "devDependencies": {
+    "gh-pages": "^1.2.0",
     "standard": "^11.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom"
+    "test": "react-scripts test --env=jsdom",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   }
 }
