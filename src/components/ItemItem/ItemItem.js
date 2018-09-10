@@ -37,11 +37,14 @@ class ItemItem extends Component {
     const { item, onCheck, onDelete } = this.props
     const open = Boolean(this.state.anchorEl)
     return (
-      <ListItem style={{ backgroundColor: indigo[100] }}>
+      <ListItem style={{ backgroundColor: indigo[50] }}>
         <DragHandle />
         <ListItemText
           primary={
-            <Fragment><Checkbox checked={item.checked} />{item.text}</Fragment>
+            <Fragment>
+              <Checkbox checked={item.checked} />
+              <span style={{ fontWeight: 'bold' }}>{item.text}</span>
+            </Fragment>
           }
           onClick={() => onCheck(item.id)}
         />
