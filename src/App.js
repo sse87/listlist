@@ -62,9 +62,9 @@ class App extends Component {
 
   loadStateFromLocalStorage () {
     // Parse the localStorage json string to hopefully an array and update the state
-    const value = JSON.parse(localStorage.getItem('list'))
-    if (Array.isArray(value)) {
-      this.setState({ items: value })
+    const items = JSON.parse(localStorage.getItem('list'))
+    if (Array.isArray(items)) {
+      this.setState({ items })
     }
   }
 
@@ -218,6 +218,8 @@ class App extends Component {
                   items: [...items, ...newItems],
                   isModalOpen: false,
                   textarea: ''
+                }, () => {
+                  this.saveStateToLocalStorage()
                 })
               }}>
                 Add them
