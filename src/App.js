@@ -2,13 +2,27 @@
 import React, { Component } from 'react'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import indigo from '@material-ui/core/colors/indigo'
-import AppBar from '@material-ui/core/AppBar'
-import Toolbar from '@material-ui/core/Toolbar'
-import Typography from '@material-ui/core/Typography'
-import Button from '@material-ui/core/Button'
-import AddIcon from '@material-ui/icons/Add'
-import Modal from '@material-ui/core/Modal'
-import TextField from '@material-ui/core/TextField'
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Modal,
+  TextField,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText
+} from '@material-ui/core'
+import {
+  Add as AddIcon,
+  MoreVert as MoreVertIcon,
+  // Share as ShareIcon,
+  Delete as DeleteIcon,
+  DeleteOutlined as DeleteOutlinedIcon,
+  DeleteSweep as DeleteSweepIcon
+} from '@material-ui/icons'
 import { arrayMove } from 'react-sortable-hoc'
 
 import ListList from './components/ListList'
@@ -27,35 +41,28 @@ class App extends Component {
       items: [],
       sortingItem: null,
       isModalOpen: false,
-      textarea: ''
+      textarea: '',
+      anchorEl: null,
+      deleteMode: false,
+      deleteAllCounter: 0
     }
 
+    this.loadStateFromLocalStorage = this.loadStateFromLocalStorage.bind(this)
+    this.saveStateToLocalStorage = this.saveStateToLocalStorage.bind(this)
     this.onSortStart = this.onSortStart.bind(this)
     this.onSortEnd = this.onSortEnd.bind(this)
     this.onCheck = this.onCheck.bind(this)
     this.onDelete = this.onDelete.bind(this)
-    this.handleOpen = this.handleOpen.bind(this)
-    this.handleClose = this.handleClose.bind(this)
+    this.onDeleteAll = this.onDeleteAll.bind(this)
   }
 
   componentDidMount () {
     this.loadStateFromLocalStorage()
-    // add event listener to save state to localStorage
-    // when user leaves/refreshes the page
-    window.addEventListener('beforeunload', this.saveStateToLocalStorage.bind(this))
-  }
-
-  componentWillUnmount () {
-    window.removeEventListener('beforeunload', this.saveStateToLocalStorage.bind(this))
-    // saves if component has a chance to unmount
-    this.saveStateToLocalStorage()
   }
 
   loadStateFromLocalStorage () {
-    let value = localStorage.getItem('list')
-
-    // parse the localStorage string and setState
-    value = JSON.parse(value)
+    // Parse the localStorage json string to hopefully an array and update the state
+    const value = JSON.parse(localStorage.getItem('list'))
     if (Array.isArray(value)) {
       this.setState({ items: value })
     }
@@ -71,7 +78,9 @@ class App extends Component {
 
   onSortEnd ({ oldIndex, newIndex }) {
     const items = arrayMove(this.state.items, oldIndex, newIndex)
-    this.setState({ items, sortingItem: null })
+    this.setState({ items, sortingItem: null }, () => {
+      this.saveStateToLocalStorage()
+    })
   }
 
   onCheck (id) {
@@ -81,46 +90,70 @@ class App extends Component {
       }
       return item
     })
-    this.setState({ items })
+    this.setState({ items }, () => {
+      this.saveStateToLocalStorage()
+    })
   }
 
   onDelete (id) {
     const items = this.state.items.filter(item => item.id !== id)
-    this.setState({ items })
+    this.setState({ items }, () => {
+      this.saveStateToLocalStorage()
+    })
   }
 
-  handleOpen () {
-    this.setState({ isModalOpen: true })
-  }
-
-  handleClose () {
-    this.setState({ isModalOpen: false })
+  onDeleteAll () {
+    this.setState({ items: [] }, () => {
+      this.saveStateToLocalStorage()
+    })
   }
 
   render () {
+    const {
+      items,
+      sortingItem,
+      isModalOpen,
+      textarea,
+      anchorEl,
+      deleteMode,
+      deleteAllCounter
+    } = this.state
+
+    const open = Boolean(anchorEl)
+
     return (
       <MuiThemeProvider theme={theme}>
         <AppBar position='static' className='mb-5'>
           <Toolbar>
-            <Typography variant='title' color='inherit'>List List</Typography>
+            <Typography variant='title' color='inherit' style={{ flexGrow: 1 }}>List List</Typography>
+            <IconButton
+              aria-label='options'
+              aria-owns={open ? 'app-options' : null}
+              aria-haspopup='true'
+              onClick={(e) => this.setState({ anchorEl: e.currentTarget })}
+              color='inherit'
+            >
+              <MoreVertIcon color='inherit' />
+            </IconButton>
           </Toolbar>
         </AppBar>
         <div className='container px-0' style={{ paddingBottom: 108 }}>
           <ListList
-            items={this.state.items}
+            items={items}
+            sortingItemIndex={sortingItem}
             onSortEnd={this.onSortEnd}
             onCheck={this.onCheck}
             onDelete={this.onDelete}
             onSortStart={this.onSortStart}
-            sortingItemIndex={this.state.sortingItem}
+            deleteMode={deleteMode}
           />
         </div>
-        {this.state.isModalOpen === false &&
+        {isModalOpen === false &&
           <Button
             variant='fab'
             color='primary'
-            aria-label='Add'
-            onClick={this.handleOpen}
+            aria-label='add'
+            onClick={() => this.setState({ isModalOpen: true })}
             style={{
               position: 'fixed',
               bottom: 26,
@@ -130,8 +163,33 @@ class App extends Component {
             <AddIcon />
           </Button>
         }
-
-        <Modal open={this.state.isModalOpen} onClose={this.handleClose}>
+        <Menu id='app-options' anchorEl={anchorEl} open={open} onClose={() => this.setState({ anchorEl: null })}>
+          {/*
+          <MenuItem onClick={() => {}}>
+            <ListItemIcon><ShareIcon /></ListItemIcon>
+            <ListItemText inset primary='Copy share link' />
+          </MenuItem>
+          */}
+          <MenuItem onClick={() => this.setState({ deleteMode: !deleteMode })}>
+            {!deleteMode && <ListItemIcon><DeleteIcon /></ListItemIcon>}
+            {deleteMode && <ListItemIcon><DeleteOutlinedIcon /></ListItemIcon>}
+            <ListItemText inset primary={`${deleteMode ? 'Hide' : 'Show'} delete buttons`} />
+          </MenuItem>
+          <MenuItem onClick={() => {
+            if (deleteAllCounter === 2) {
+              this.onDeleteAll()
+              this.setState({ deleteAllCounter: 0 })
+            } else {
+              this.setState({ deleteAllCounter: (deleteAllCounter + 1) })
+            }
+          }}>
+            <ListItemIcon><DeleteSweepIcon /></ListItemIcon>
+            <ListItemText inset primary={
+              deleteAllCounter === 0 ? 'Delete all' : deleteAllCounter === 1 ? 'Are you sure?' : 'Are you sure sure?'
+            } />
+          </MenuItem>
+        </Menu>
+        <Modal open={isModalOpen} onClose={() => this.setState({ isModalOpen: false })}>
           <div style={{
             backgroundColor: '#fff',
             boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)',
@@ -147,17 +205,17 @@ class App extends Component {
               multiline
               fullWidth
               onChange={(e) => this.setState({ textarea: e.target.value })}
-              value={this.state.textarea}
+              value={textarea}
             />
             <div className='text-right'>
               <Button className='mt-3' variant='contained' color='primary' onClick={() => {
-                const newItems = this.state.textarea.replace('\r', '').split('\n').map(strItem => ({
+                const newItems = textarea.replace('\r', '').split('\n').map(strItem => ({
                   id: makeId(),
                   text: strItem,
                   checked: false
                 }))
                 this.setState({
-                  items: [...this.state.items, ...newItems],
+                  items: [...items, ...newItems],
                   isModalOpen: false,
                   textarea: ''
                 })

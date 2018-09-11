@@ -15,6 +15,8 @@ import {
 } from '@material-ui/core'
 import {
   Reorder as ReorderIcon,
+  DragHandle as DragHandleIcon,
+  DragIndicator as DragIndicatorIcon,
   Delete as DeleteIcon
 } from '@material-ui/icons'
 
@@ -25,43 +27,42 @@ class ItemItem extends Component {
     this.state = {
       anchorEl: null
     }
-
-    this.handleClose = this.handleClose.bind(this)
-  }
-
-  handleClose () {
-    this.setState({ anchorEl: null })
   }
 
   render () {
-    const { item, activeItem, onCheck, onDelete } = this.props
+    const { item, isItemActive, onCheck, onDelete, deleteMode } = this.props
     const open = Boolean(this.state.anchorEl)
 
     return (
       <ListItem
         className='mb-4'
         component={Paper}
-        elevation={activeItem ? 4 : 1}
+        elevation={isItemActive ? 4 : 1}
+        style={{ opacity: item.checked ? 0.6 : 1 }}
       >
-        <DragHandle />
         <ListItemText
           primary={
             <Fragment>
-              <Checkbox checked={item.checked} />
-              <span style={{ fontWeight: 'bold' }}>{item.text}</span>
+              <Checkbox checked={item.checked} color='primary' />
+              <span style={{ fontWeight: 'bold', textDecoration: (item.checked ? 'line-through' : 'none') }}>{item.text}</span>
             </Fragment>
           }
           onClick={() => onCheck(item.id)}
         />
-        <IconButton
-          aria-label='delete'
-          aria-owns={open ? 'item-menu' : null}
-          aria-haspopup='true'
-          onClick={(e) => this.setState({ anchorEl: e.currentTarget })}
-        >
-          <DeleteIcon />
-        </IconButton>
-        <Menu id='item-menu' anchorEl={this.state.anchorEl} open={open} onClose={this.handleClose}>
+        {!deleteMode &&
+          <DragHandle />
+        }
+        {deleteMode &&
+          <IconButton
+            aria-label='delete'
+            aria-owns={open ? 'item-menu' : null}
+            aria-haspopup='true'
+            onClick={(e) => this.setState({ anchorEl: e.currentTarget })}
+          >
+            <DeleteIcon />
+          </IconButton>
+        }
+        <Menu id='item-menu' anchorEl={this.state.anchorEl} open={open} onClose={() => this.setState({ anchorEl: null })}>
           <MenuItem onClick={() => onDelete(item.id)}>Are you sure?</MenuItem>
         </Menu>
       </ListItem>
@@ -71,15 +72,22 @@ class ItemItem extends Component {
 
 ItemItem.propTypes = {
   item: PropTypes.object.isRequired,
-  activeItem: PropTypes.bool.isRequired,
+  isItemActive: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired
+  onDelete: PropTypes.func.isRequired,
+  deleteMode: PropTypes.bool
 }
 
 ItemItem.defaultProps = {
+  deleteMode: false
 }
 
 export default SortableElement(ItemItem)
 
 // This can be any component you want
-const DragHandle = SortableHandle(() => <ReorderIcon />)
+const randNumber = Math.floor(Math.random() * Math.floor(3))
+const DragHandle = SortableHandle(() => {
+  if (randNumber === 0) return <ReorderIcon />
+  if (randNumber === 1) return <DragHandleIcon />
+  return <DragIndicatorIcon />
+})
