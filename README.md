@@ -1,7 +1,7 @@
 # listlist
 Simple, sortable, mobile-friendly todo list.
 
-This project was bootstrapped with .
+<img src="./screenshots/listlist.png" width="511" height="596" alt="listlist">
 
 ## Framework and libaries used:
 - [React](https://github.com/facebook/react)

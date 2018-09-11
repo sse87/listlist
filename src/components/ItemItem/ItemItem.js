@@ -14,8 +14,6 @@ import {
   Paper
 } from '@material-ui/core'
 import {
-  Reorder as ReorderIcon,
-  DragHandle as DragHandleIcon,
   DragIndicator as DragIndicatorIcon,
   Delete as DeleteIcon
 } from '@material-ui/icons'
@@ -85,9 +83,4 @@ ItemItem.defaultProps = {
 export default SortableElement(ItemItem)
 
 // This can be any component you want
-const randNumber = Math.floor(Math.random() * Math.floor(3))
-const DragHandle = SortableHandle(() => {
-  if (randNumber === 0) return <ReorderIcon />
-  if (randNumber === 1) return <DragHandleIcon />
-  return <DragIndicatorIcon />
-})
+const DragHandle = SortableHandle(() => <DragIndicatorIcon className='cursor-grab' />)
