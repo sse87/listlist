@@ -1,5 +1,5 @@
 # listlist
-Simple, sortable, mobile-friendly todo list.
+Simple, sortable, mobile-friendly todo list web apps.
 
 <img src="./screenshots/listlist.png" width="511" height="596" alt="listlist">
 
@@ -8,6 +8,7 @@ Simple, sortable, mobile-friendly todo list.
 - [Create React App](https://github.com/facebookincubator/create-react-app)
 - [Material-UI](https://github.com/mui-org/material-ui)
 - [React Sortable (HOC)](https://github.com/clauderic/react-sortable-hoc)
+- [Copy-to-clipboard React component](https://github.com/nkbt/react-copy-to-clipboard)
 
 ### Installation:
 
@@ -18,4 +19,4 @@ Simple, sortable, mobile-friendly todo list.
 > npm start
 ```
 
-## [Live Demo](https://sse87.github.io/listlist/)
+## [try it out](https://sse87.github.io/listlist/)

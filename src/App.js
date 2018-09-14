@@ -1,4 +1,4 @@
-/* globals localStorage */
+/* globals localStorage, alert */
 import React, { Component } from 'react'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import indigo from '@material-ui/core/colors/indigo'
@@ -13,19 +13,27 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Snackbar
 } from '@material-ui/core'
 import {
   Add as AddIcon,
   MoreVert as MoreVertIcon,
-  // Share as ShareIcon,
+  Share as ShareIcon,
   Delete as DeleteIcon,
   DeleteOutlined as DeleteOutlinedIcon,
   DeleteSweep as DeleteSweepIcon
 } from '@material-ui/icons'
 import { arrayMove } from 'react-sortable-hoc'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 
 import ListList from './components/ListList'
+import {
+  makeId,
+  getShareLink,
+  parseItems,
+  getQueryVariable
+} from './utilityFunctions'
 
 const theme = createMuiTheme({
   palette: {
@@ -44,11 +52,13 @@ class App extends Component {
       textarea: '',
       anchorEl: null,
       deleteMode: false,
-      deleteAllCounter: 0
+      deleteAllCounter: 0,
+      snackbarOpen: false
     }
 
     this.loadStateFromLocalStorage = this.loadStateFromLocalStorage.bind(this)
     this.saveStateToLocalStorage = this.saveStateToLocalStorage.bind(this)
+    this.checkForImports = this.checkForImports.bind(this)
     this.onSortStart = this.onSortStart.bind(this)
     this.onSortEnd = this.onSortEnd.bind(this)
     this.onCheck = this.onCheck.bind(this)
@@ -57,19 +67,47 @@ class App extends Component {
   }
 
   componentDidMount () {
-    this.loadStateFromLocalStorage()
+    this.loadStateFromLocalStorage().then(() => {
+      this.checkForImports()
+    })
   }
 
   loadStateFromLocalStorage () {
-    // Parse the localStorage json string to hopefully an array and update the state
-    const items = JSON.parse(localStorage.getItem('list'))
-    if (Array.isArray(items)) {
-      this.setState({ items })
-    }
+    return new Promise(resolve => {
+      // Parse the localStorage json string to hopefully an array and update the state
+      const items = JSON.parse(localStorage.getItem('list'))
+      if (Array.isArray(items)) {
+        this.setState({ items }, () => resolve())
+      } else {
+        resolve()
+      }
+    })
   }
 
   saveStateToLocalStorage () {
-    localStorage.setItem('list', JSON.stringify(this.state.items))
+    return new Promise(resolve => {
+      localStorage.setItem('list', JSON.stringify(this.state.items))
+      resolve()
+    })
+  }
+
+  // Still under construction
+  checkForImports () {
+    const importString = getQueryVariable('import')
+    if (importString !== false) {
+      console.log('importString:', importString)
+      console.log('parseItems:', parseItems(importString))
+      const newItems = parseItems(importString)
+      if (this.state.items.length === 0 && Array.isArray(newItems)) {
+        console.log('Item loaded from import string')
+        this.setState({ items: newItems }, () => {
+          this.saveStateToLocalStorage().then(() => {
+            // Refresh without Drop all query variables
+            window.location.href = `${window.location.origin}${window.location.pathname}`
+          })
+        })
+      }
+    }
   }
 
   onSortStart ({ index }) {
@@ -116,7 +154,8 @@ class App extends Component {
       textarea,
       anchorEl,
       deleteMode,
-      deleteAllCounter
+      deleteAllCounter,
+      snackbarOpen
     } = this.state
 
     const open = Boolean(anchorEl)
@@ -163,14 +202,31 @@ class App extends Component {
             <AddIcon />
           </Button>
         }
-        <Menu id='app-options' anchorEl={anchorEl} open={open} onClose={() => this.setState({ anchorEl: null })}>
-          {/*
-          <MenuItem onClick={() => {}}>
-            <ListItemIcon><ShareIcon /></ListItemIcon>
-            <ListItemText inset primary='Copy share link' />
-          </MenuItem>
-          */}
-          <MenuItem onClick={() => this.setState({ deleteMode: !deleteMode })}>
+        <Menu
+          id='app-options'
+          anchorEl={anchorEl}
+          open={open}
+          onClose={() => this.setState({ anchorEl: null })}
+          onExited={() => this.setState({ deleteAllCounter: 0 })}
+        >
+          <CopyToClipboard
+            text={getShareLink(this.state.items)}
+            onCopy={(text, result) => {
+              if (text !== '' && result) {
+                this.setState({ anchorEl: null, snackbarOpen: true })
+              } else {
+                console.log('ERROR - CopyToClipboard.onCopy() - (text, result):', text, result)
+                // TODO: Handle this better, drop the alert and display model with message and link so it can be copied manually
+                alert('Some error occurred when copying to clipboard but here is the link:\n' + getShareLink(this.state.items))
+              }
+            }}
+          >
+            <MenuItem>
+              <ListItemIcon><ShareIcon /></ListItemIcon>
+              <ListItemText inset primary='Copy share link' />
+            </MenuItem>
+          </CopyToClipboard>
+          <MenuItem onClick={() => this.setState({ deleteMode: !deleteMode, anchorEl: null })}>
             {!deleteMode && <ListItemIcon><DeleteIcon /></ListItemIcon>}
             {deleteMode && <ListItemIcon><DeleteOutlinedIcon /></ListItemIcon>}
             <ListItemText inset primary={`${deleteMode ? 'Hide' : 'Show'} delete buttons`} />
@@ -178,7 +234,7 @@ class App extends Component {
           <MenuItem onClick={() => {
             if (deleteAllCounter === 2) {
               this.onDeleteAll()
-              this.setState({ deleteAllCounter: 0 })
+              this.setState({ deleteAllCounter: 0, anchorEl: null })
             } else {
               this.setState({ deleteAllCounter: (deleteAllCounter + 1) })
             }
@@ -209,6 +265,7 @@ class App extends Component {
             />
             <div className='text-right'>
               <Button className='mt-3' variant='contained' color='primary' onClick={() => {
+                // Convert list items from being a string to an object
                 const newItems = textarea.replace('\r', '').split('\n').map(strItem => ({
                   id: makeId(),
                   text: strItem,
@@ -227,16 +284,20 @@ class App extends Component {
             </div>
           </div>
         </Modal>
+        <Snackbar
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          open={snackbarOpen}
+          onClose={(event, reason) => {
+            if (reason === 'clickaway') { return }
+            this.setState({ snackbarOpen: false })
+          }}
+          autoHideDuration={2000}
+          ContentProps={{ 'aria-describedby': 'message-id' }}
+          message={<span id='message-id'>Link copied!</span>}
+        />
       </MuiThemeProvider>
     )
   }
 }
 
 export default App
-
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-const makeId = (length = 10) => (
-  Array(length).join().split(',').map(() => (
-    ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length))
-  )).join('')
-)
