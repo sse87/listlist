@@ -277,13 +277,14 @@ class App extends Component {
               rows='7'
               multiline
               fullWidth
+              autoFocus
               onChange={(e) => this.setState({ textareaAddItems: e.target.value })}
               value={textareaAddItems}
             />
             <div className='text-right'>
               <Button className='mt-3' variant='contained' color='primary' onClick={() => {
                 // Convert list items from being a string to an object
-                const newItems = textareaAddItems.replace('\r', '').split('\n').map(strItem => ({
+                const newItems = textareaAddItems.trim().replace('\r', '').split('\n').map(strItem => ({
                   id: makeId(),
                   text: strItem,
                   checked: false
