@@ -1,5 +1,5 @@
 /* globals localStorage, alert */
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import indigo from '@material-ui/core/colors/indigo'
 import {
@@ -20,8 +20,7 @@ import {
   Add as AddIcon,
   MoreVert as MoreVertIcon,
   Share as ShareIcon,
-  Delete as DeleteIcon,
-  DeleteOutlined as DeleteOutlinedIcon,
+  Edit as EditIcon,
   DeleteSweep as DeleteSweepIcon
 } from '@material-ui/icons'
 import { arrayMove } from 'react-sortable-hoc'
@@ -51,7 +50,7 @@ class App extends Component {
       modalAddItemsOpen: false,
       textareaAddItems: '',
       appMenuAnchorEl: null,
-      appDeleteMode: false,
+      appEditMode: false,
       confirmCounterdeleteAllChecked: 0,
       confirmCounterdeleteAllItems: 0,
       snackbarOpen: false
@@ -63,6 +62,7 @@ class App extends Component {
     this.onSortStart = this.onSortStart.bind(this)
     this.onSortEnd = this.onSortEnd.bind(this)
     this.onCheck = this.onCheck.bind(this)
+    this.onEdit = this.onEdit.bind(this)
     this.onDelete = this.onDelete.bind(this)
     this.onDeleteAllChecked = this.onDeleteAllChecked.bind(this)
     this.onDeleteAllItems = this.onDeleteAllItems.bind(this)
@@ -133,6 +133,16 @@ class App extends Component {
     this.overwriteItems(items)
   }
 
+  onEdit (id, newText) {
+    const items = this.state.items.map((item) => {
+      if (item.id === id) {
+        item.text = newText
+      }
+      return item
+    })
+    this.overwriteItems(items)
+  }
+
   onDelete (id) {
     const items = this.state.items.filter(item => item.id !== id)
     this.overwriteItems(items)
@@ -160,7 +170,7 @@ class App extends Component {
       modalAddItemsOpen,
       textareaAddItems,
       appMenuAnchorEl,
-      appDeleteMode,
+      appEditMode,
       confirmCounterdeleteAllChecked,
       confirmCounterdeleteAllItems,
       snackbarOpen
@@ -185,15 +195,35 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         <div className='container px-0' style={{ paddingBottom: 108 }}>
-          <ListList
-            items={items}
-            sortingItemIndex={sortingItem}
-            onSortEnd={this.onSortEnd}
-            onCheck={this.onCheck}
-            onDelete={this.onDelete}
-            onSortStart={this.onSortStart}
-            appDeleteMode={appDeleteMode}
-          />
+          {items.length === 0 &&
+            <Fragment>
+              <p className='text-center p-3'>Your list is empty! You can easily add items to it by pressing the button below</p>
+              {modalAddItemsOpen === false &&
+                <p className='text-center'>
+                  <Button
+                    variant='contained'
+                    color='primary'
+                    aria-label='add'
+                    onClick={() => this.setState({ modalAddItemsOpen: true })}
+                  >
+                    Add items
+                  </Button>
+                </p>
+              }
+            </Fragment>
+          }
+          {items.length > 0 &&
+            <ListList
+              items={items}
+              sortingItemIndex={sortingItem}
+              onSortEnd={this.onSortEnd}
+              onCheck={this.onCheck}
+              onEdit={this.onEdit}
+              onDelete={this.onDelete}
+              onSortStart={this.onSortStart}
+              appEditMode={appEditMode}
+            />
+          }
         </div>
         {modalAddItemsOpen === false &&
           <Button
@@ -230,10 +260,9 @@ class App extends Component {
               <ListItemText inset primary='Copy share link' />
             </MenuItem>
           </CopyToClipboard>
-          <MenuItem onClick={() => this.setState({ appDeleteMode: !appDeleteMode, appMenuAnchorEl: null })}>
-            {!appDeleteMode && <ListItemIcon><DeleteOutlinedIcon /></ListItemIcon>}
-            {appDeleteMode && <ListItemIcon><DeleteIcon /></ListItemIcon>}
-            <ListItemText inset primary={`${appDeleteMode ? 'Hide' : 'Show'} delete buttons`} />
+          <MenuItem onClick={() => this.setState({ appEditMode: !appEditMode, appMenuAnchorEl: null })}>
+            <ListItemIcon><EditIcon /></ListItemIcon>
+            <ListItemText inset primary={`${appEditMode ? 'Exit' : 'Enter'} edit mode`} />
           </MenuItem>
           <MenuItem onClick={() => {
             if (confirmCounterdeleteAllChecked === 2) {
