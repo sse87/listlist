@@ -48,11 +48,12 @@ class App extends Component {
     this.state = {
       items: [],
       sortingItem: null,
-      isModalOpen: false,
-      textarea: '',
-      anchorEl: null,
-      deleteMode: false,
-      deleteAllCounter: 0,
+      modalAddItemsOpen: false,
+      textareaAddItems: '',
+      appMenuAnchorEl: null,
+      appDeleteMode: false,
+      confirmCounterdeleteAllChecked: 0,
+      confirmCounterdeleteAllItems: 0,
       snackbarOpen: false
     }
 
@@ -63,7 +64,8 @@ class App extends Component {
     this.onSortEnd = this.onSortEnd.bind(this)
     this.onCheck = this.onCheck.bind(this)
     this.onDelete = this.onDelete.bind(this)
-    this.onDeleteAll = this.onDeleteAll.bind(this)
+    this.onDeleteAllChecked = this.onDeleteAllChecked.bind(this)
+    this.onDeleteAllItems = this.onDeleteAllItems.bind(this)
   }
 
   componentDidMount () {
@@ -102,7 +104,7 @@ class App extends Component {
         console.log('Item loaded from import string')
         this.setState({ items: newItems }, () => {
           this.saveStateToLocalStorage().then(() => {
-            // Refresh without Drop all query variables
+            // Refresh and drop all query variables like '?import=YTB8...'
             window.location.href = `${window.location.origin}${window.location.pathname}`
           })
         })
@@ -128,20 +130,25 @@ class App extends Component {
       }
       return item
     })
-    this.setState({ items }, () => {
-      this.saveStateToLocalStorage()
-    })
+    this.overwriteItems(items)
   }
 
   onDelete (id) {
     const items = this.state.items.filter(item => item.id !== id)
-    this.setState({ items }, () => {
-      this.saveStateToLocalStorage()
-    })
+    this.overwriteItems(items)
   }
 
-  onDeleteAll () {
-    this.setState({ items: [] }, () => {
+  onDeleteAllChecked () {
+    const items = this.state.items.filter(item => !item.checked)
+    this.overwriteItems(items)
+  }
+
+  onDeleteAllItems () {
+    this.overwriteItems([])
+  }
+
+  overwriteItems (newItems) {
+    this.setState({ items: newItems }, () => {
       this.saveStateToLocalStorage()
     })
   }
@@ -150,15 +157,16 @@ class App extends Component {
     const {
       items,
       sortingItem,
-      isModalOpen,
-      textarea,
-      anchorEl,
-      deleteMode,
-      deleteAllCounter,
+      modalAddItemsOpen,
+      textareaAddItems,
+      appMenuAnchorEl,
+      appDeleteMode,
+      confirmCounterdeleteAllChecked,
+      confirmCounterdeleteAllItems,
       snackbarOpen
     } = this.state
 
-    const open = Boolean(anchorEl)
+    const menuAppOpen = Boolean(appMenuAnchorEl)
 
     return (
       <MuiThemeProvider theme={theme}>
@@ -167,9 +175,9 @@ class App extends Component {
             <Typography variant='title' color='inherit' style={{ flexGrow: 1 }}>List List</Typography>
             <IconButton
               aria-label='options'
-              aria-owns={open ? 'app-options' : null}
+              aria-owns={menuAppOpen ? 'app-options' : null}
               aria-haspopup='true'
-              onClick={(e) => this.setState({ anchorEl: e.currentTarget })}
+              onClick={(e) => this.setState({ appMenuAnchorEl: e.currentTarget })}
               color='inherit'
             >
               <MoreVertIcon color='inherit' />
@@ -184,36 +192,32 @@ class App extends Component {
             onCheck={this.onCheck}
             onDelete={this.onDelete}
             onSortStart={this.onSortStart}
-            deleteMode={deleteMode}
+            appDeleteMode={appDeleteMode}
           />
         </div>
-        {isModalOpen === false &&
+        {modalAddItemsOpen === false &&
           <Button
             variant='fab'
             color='primary'
             aria-label='add'
-            onClick={() => this.setState({ isModalOpen: true })}
-            style={{
-              position: 'fixed',
-              bottom: 26,
-              right: 26
-            }}
+            onClick={() => this.setState({ modalAddItemsOpen: true })}
+            style={{ position: 'fixed', bottom: 26, right: 26 }}
           >
             <AddIcon />
           </Button>
         }
         <Menu
           id='app-options'
-          anchorEl={anchorEl}
-          open={open}
-          onClose={() => this.setState({ anchorEl: null })}
-          onExited={() => this.setState({ deleteAllCounter: 0 })}
+          anchorEl={appMenuAnchorEl}
+          open={menuAppOpen}
+          onClose={() => this.setState({ appMenuAnchorEl: null })}
+          onExited={() => this.setState({ confirmCounterdeleteAllItems: 0 })}
         >
           <CopyToClipboard
             text={getShareLink(this.state.items)}
             onCopy={(text, result) => {
               if (text !== '' && result) {
-                this.setState({ anchorEl: null, snackbarOpen: true })
+                this.setState({ snackbarOpen: true, appMenuAnchorEl: null })
               } else {
                 console.log('ERROR - CopyToClipboard.onCopy() - (text, result):', text, result)
                 // TODO: Handle this better, drop the alert and display model with message and link so it can be copied manually
@@ -226,26 +230,39 @@ class App extends Component {
               <ListItemText inset primary='Copy share link' />
             </MenuItem>
           </CopyToClipboard>
-          <MenuItem onClick={() => this.setState({ deleteMode: !deleteMode, anchorEl: null })}>
-            {!deleteMode && <ListItemIcon><DeleteIcon /></ListItemIcon>}
-            {deleteMode && <ListItemIcon><DeleteOutlinedIcon /></ListItemIcon>}
-            <ListItemText inset primary={`${deleteMode ? 'Hide' : 'Show'} delete buttons`} />
+          <MenuItem onClick={() => this.setState({ appDeleteMode: !appDeleteMode, appMenuAnchorEl: null })}>
+            {!appDeleteMode && <ListItemIcon><DeleteOutlinedIcon /></ListItemIcon>}
+            {appDeleteMode && <ListItemIcon><DeleteIcon /></ListItemIcon>}
+            <ListItemText inset primary={`${appDeleteMode ? 'Hide' : 'Show'} delete buttons`} />
           </MenuItem>
           <MenuItem onClick={() => {
-            if (deleteAllCounter === 2) {
-              this.onDeleteAll()
-              this.setState({ deleteAllCounter: 0, anchorEl: null })
+            if (confirmCounterdeleteAllChecked === 2) {
+              this.onDeleteAllChecked()
+              this.setState({ confirmCounterdeleteAllChecked: 0, appMenuAnchorEl: null })
             } else {
-              this.setState({ deleteAllCounter: (deleteAllCounter + 1) })
+              this.setState({ confirmCounterdeleteAllChecked: (confirmCounterdeleteAllChecked + 1) })
             }
           }}>
             <ListItemIcon><DeleteSweepIcon /></ListItemIcon>
             <ListItemText inset primary={
-              deleteAllCounter === 0 ? 'Delete all' : deleteAllCounter === 1 ? 'Are you sure?' : 'Are you sure sure?'
+              confirmCounterdeleteAllChecked === 0 ? 'Delete checked' : confirmCounterdeleteAllChecked === 1 ? 'Are you sure?' : 'Are you sure sure?'
+            } />
+          </MenuItem>
+          <MenuItem onClick={() => {
+            if (confirmCounterdeleteAllItems === 2) {
+              this.onDeleteAllItems()
+              this.setState({ confirmCounterdeleteAllItems: 0, appMenuAnchorEl: null })
+            } else {
+              this.setState({ confirmCounterdeleteAllItems: (confirmCounterdeleteAllItems + 1) })
+            }
+          }}>
+            <ListItemIcon><DeleteSweepIcon /></ListItemIcon>
+            <ListItemText inset primary={
+              confirmCounterdeleteAllItems === 0 ? 'Delete all' : confirmCounterdeleteAllItems === 1 ? 'Are you sure?' : 'Are you sure sure?'
             } />
           </MenuItem>
         </Menu>
-        <Modal open={isModalOpen} onClose={() => this.setState({ isModalOpen: false })}>
+        <Modal open={modalAddItemsOpen} onClose={() => this.setState({ modalAddItemsOpen: false })}>
           <div style={{
             backgroundColor: '#fff',
             boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)',
@@ -260,21 +277,21 @@ class App extends Component {
               rows='7'
               multiline
               fullWidth
-              onChange={(e) => this.setState({ textarea: e.target.value })}
-              value={textarea}
+              onChange={(e) => this.setState({ textareaAddItems: e.target.value })}
+              value={textareaAddItems}
             />
             <div className='text-right'>
               <Button className='mt-3' variant='contained' color='primary' onClick={() => {
                 // Convert list items from being a string to an object
-                const newItems = textarea.replace('\r', '').split('\n').map(strItem => ({
+                const newItems = textareaAddItems.replace('\r', '').split('\n').map(strItem => ({
                   id: makeId(),
                   text: strItem,
                   checked: false
                 }))
                 this.setState({
                   items: [...items, ...newItems],
-                  isModalOpen: false,
-                  textarea: ''
+                  modalAddItemsOpen: false,
+                  textareaAddItems: ''
                 }, () => {
                   this.saveStateToLocalStorage()
                 })

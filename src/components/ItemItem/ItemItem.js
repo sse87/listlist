@@ -28,7 +28,7 @@ class ItemItem extends Component {
   }
 
   render () {
-    const { item, isItemActive, onCheck, onDelete, deleteMode } = this.props
+    const { item, isItemActive, onCheck, onDelete, appDeleteMode } = this.props
     const open = Boolean(this.state.anchorEl)
 
     return (
@@ -47,10 +47,10 @@ class ItemItem extends Component {
           }
           onClick={() => onCheck(item.id)}
         />
-        {!deleteMode &&
+        {!appDeleteMode &&
           <DragHandle />
         }
-        {deleteMode &&
+        {appDeleteMode &&
           <IconButton
             aria-label='delete'
             aria-owns={open ? 'item-menu' : null}
@@ -73,11 +73,11 @@ ItemItem.propTypes = {
   isItemActive: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  deleteMode: PropTypes.bool
+  appDeleteMode: PropTypes.bool
 }
 
 ItemItem.defaultProps = {
-  deleteMode: false
+  appDeleteMode: false
 }
 
 export default SortableElement(ItemItem)
