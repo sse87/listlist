@@ -11,10 +11,16 @@ import {
   MenuItem,
   Menu,
   Checkbox,
-  Paper
+  Paper,
+  Grid,
+  TextField,
+  Button
 } from '@material-ui/core'
 import {
   DragIndicator as DragIndicatorIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Clear as ClearIcon,
   Delete as DeleteIcon
 } from '@material-ui/icons'
 
@@ -23,13 +29,17 @@ class ItemItem extends Component {
     super(props)
 
     this.state = {
-      anchorEl: null
+      editingItem: false,
+      editingText: '',
+      deleteConfirmAnchorEl: null
     }
   }
 
   render () {
-    const { item, isItemActive, onCheck, onDelete, deleteMode } = this.props
-    const open = Boolean(this.state.anchorEl)
+    const { item, isItemActive, onCheck, onEdit, onDelete, appEditMode } = this.props
+    const { editingItem, editingText, deleteConfirmAnchorEl } = this.state
+
+    const deleteConfirmOpen = Boolean(deleteConfirmAnchorEl)
 
     return (
       <ListItem
@@ -38,46 +48,92 @@ class ItemItem extends Component {
         elevation={isItemActive ? 4 : 1}
         style={{ opacity: item.checked ? 0.6 : 1 }}
       >
-        <ListItemText
-          primary={
+        {!editingItem &&
+        <Fragment>
+          <ListItemText
+            primary={
+              <Fragment>
+                <Checkbox checked={item.checked} color='primary' />
+                <span style={{ fontWeight: 'bold', textDecoration: (item.checked ? 'line-through' : 'none') }}>{item.text}</span>
+              </Fragment>
+            }
+            onClick={() => onCheck(item.id)}
+          />
+          {!appEditMode &&
+            <DragHandle />
+          }
+          {appEditMode &&
             <Fragment>
-              <Checkbox checked={item.checked} color='primary' />
-              <span style={{ fontWeight: 'bold', textDecoration: (item.checked ? 'line-through' : 'none') }}>{item.text}</span>
+              <IconButton
+                aria-label='edit'
+                onClick={() => this.setState({ editingItem: true, editingText: item.text })}
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton
+                aria-label='delete'
+                aria-owns={deleteConfirmOpen ? 'item-menu' : null}
+                aria-haspopup='true'
+                onClick={(e) => this.setState({ deleteConfirmAnchorEl: e.currentTarget })}
+              >
+                <DeleteIcon />
+              </IconButton>
             </Fragment>
           }
-          onClick={() => onCheck(item.id)}
-        />
-        {!deleteMode &&
-          <DragHandle />
-        }
-        {deleteMode &&
-          <IconButton
-            aria-label='delete'
-            aria-owns={open ? 'item-menu' : null}
-            aria-haspopup='true'
-            onClick={(e) => this.setState({ anchorEl: e.currentTarget })}
+          <Menu
+            id='item-menu'
+            anchorEl={deleteConfirmAnchorEl}
+            open={deleteConfirmOpen}
+            onClose={() => this.setState({ deleteConfirmAnchorEl: null })}
           >
-            <DeleteIcon />
-          </IconButton>
+            <MenuItem onClick={() => onDelete(item.id)}>Are you sure?</MenuItem>
+          </Menu>
+        </Fragment>
         }
-        <Menu id='item-menu' anchorEl={this.state.anchorEl} open={open} onClose={() => this.setState({ anchorEl: null })}>
-          <MenuItem onClick={() => onDelete(item.id)}>Are you sure?</MenuItem>
-        </Menu>
+        {editingItem &&
+          <Grid container>
+            <Grid item style={{ flexGrow: 1 }}>
+              <TextField
+                fullWidth
+                autoFocus
+                onChange={(e) => this.setState({ editingText: e.target.value })}
+                value={editingText}
+              />
+            </Grid>
+            <Grid item>
+              <Button className='ml-3' variant='contained' size='small' color='primary' onClick={() => {
+                onEdit(item.id, editingText)
+                this.setState({ editingItem: false, editingText: '' })
+              }}>
+                <SaveIcon className='mr-2' style={{ fontSize: 20 }} />
+                Save
+              </Button>
+              <Button className='ml-3' variant='contained' size='small' onClick={() => {
+                this.setState({ editingItem: false, editingText: '' })
+              }}>
+                <ClearIcon className='mr-2' style={{ fontSize: 20 }} />
+                Cancel
+              </Button>
+            </Grid>
+          </Grid>
+        }
       </ListItem>
     )
   }
 }
+// onEdit(item.id)
 
 ItemItem.propTypes = {
   item: PropTypes.object.isRequired,
   isItemActive: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
+  onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  deleteMode: PropTypes.bool
+  appEditMode: PropTypes.bool
 }
 
 ItemItem.defaultProps = {
-  deleteMode: false
+  appEditMode: false
 }
 
 export default SortableElement(ItemItem)
