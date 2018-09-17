@@ -20,6 +20,7 @@ import {
   DragIndicator as DragIndicatorIcon,
   Edit as EditIcon,
   Save as SaveIcon,
+  Clear as ClearIcon,
   Delete as DeleteIcon
 } from '@material-ui/icons'
 
@@ -106,6 +107,12 @@ class ItemItem extends Component {
               }}>
                 <SaveIcon className='mr-2' style={{ fontSize: 20 }} />
                 Save
+              </Button>
+              <Button className='ml-3' variant='contained' size='small' onClick={() => {
+                this.setState({ editingItem: false, editingText: '' })
+              }}>
+                <ClearIcon className='mr-2' style={{ fontSize: 20 }} />
+                Cancel
               </Button>
             </Grid>
           </Grid>
