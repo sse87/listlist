@@ -385,7 +385,7 @@ class App extends Component {
                 })
               })
             }}>
-              Merge lists
+              Merge
             </Button>
             <Button variant='contained' color='secondary' onClick={() => {
               this.overwriteItems(itemsToBeImport).then(() => {
@@ -394,10 +394,10 @@ class App extends Component {
                 })
               })
             }}>
-              Overwrite existing list
+              Overwrite
             </Button>
-            <Button variant='contained' color='default' onClick={() => this.setState({ itemsToBeImport: [] })}>
-              Nothing
+            <Button variant='contained' color='default' style={{ position: 'absolute', left: 4 }} onClick={() => this.setState({ itemsToBeImport: [] })}>
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
