@@ -7,14 +7,19 @@ import {
   Toolbar,
   Typography,
   Button,
-  Modal,
   TextField,
   IconButton,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Snackbar
+  Snackbar,
+  Zoom,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@material-ui/core'
 import {
   Add as AddIcon,
@@ -61,6 +66,7 @@ class App extends Component {
     this.checkForImports = this.checkForImports.bind(this)
     this.onSortStart = this.onSortStart.bind(this)
     this.onSortEnd = this.onSortEnd.bind(this)
+    this.onAdd = this.onAdd.bind(this)
     this.onCheck = this.onCheck.bind(this)
     this.onEdit = this.onEdit.bind(this)
     this.onDelete = this.onDelete.bind(this)
@@ -121,6 +127,17 @@ class App extends Component {
     this.setState({ items, sortingItem: null }, () => {
       this.saveStateToLocalStorage()
     })
+  }
+
+  onAdd (strItems) {
+    // Convert list items from being a string to an object
+    const newItems = strItems.trim().replace('\r', '').split('\n').map(strItem => ({
+      id: makeId(),
+      text: strItem,
+      checked: false
+    }))
+    // Concat the new items to current items
+    this.overwriteItems([...this.state.items, ...newItems])
   }
 
   onCheck (id) {
@@ -198,7 +215,7 @@ class App extends Component {
           {items.length === 0 &&
             <Fragment>
               <p className='text-center p-3'>Your list is empty! You can easily add items to it by pressing the button below</p>
-              {modalAddItemsOpen === false &&
+              <Zoom in={!modalAddItemsOpen}>
                 <p className='text-center'>
                   <Button
                     variant='contained'
@@ -209,7 +226,7 @@ class App extends Component {
                     Add items
                   </Button>
                 </p>
-              }
+              </Zoom>
             </Fragment>
           }
           {items.length > 0 &&
@@ -225,7 +242,7 @@ class App extends Component {
             />
           }
         </div>
-        {modalAddItemsOpen === false &&
+        <Zoom in={!modalAddItemsOpen}>
           <Button
             variant='fab'
             color='primary'
@@ -235,7 +252,7 @@ class App extends Component {
           >
             <AddIcon />
           </Button>
-        }
+        </Zoom>
         <Menu
           id='app-options'
           anchorEl={appMenuAnchorEl}
@@ -291,17 +308,17 @@ class App extends Component {
             } />
           </MenuItem>
         </Menu>
-        <Modal open={modalAddItemsOpen} onClose={() => this.setState({ modalAddItemsOpen: false })}>
-          <div style={{
-            backgroundColor: '#fff',
-            boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)',
-            width: 'calc(100% - 100px)',
-            maxWidth: 600,
-            margin: '50px auto',
-            padding: 32
-          }}>
-            <Typography variant='title'>Add to list</Typography>
-            <Typography variant='body2'>You can add many by spliting them into multiple lines</Typography>
+        <Dialog
+          open={modalAddItemsOpen}
+          onClose={() => this.setState({ modalAddItemsOpen: false })}
+          aria-labelledby='dialog-title'
+          aria-describedby='dialog-description'
+        >
+          <DialogTitle id='dialog-title'>Add to list</DialogTitle>
+          <DialogContent>
+            <DialogContentText id='dialog-description'>
+              You can add many by spliting them into multiple lines
+            </DialogContentText>
             <TextField
               rows='7'
               multiline
@@ -310,27 +327,16 @@ class App extends Component {
               onChange={(e) => this.setState({ textareaAddItems: e.target.value })}
               value={textareaAddItems}
             />
-            <div className='text-right'>
-              <Button className='mt-3' variant='contained' color='primary' onClick={() => {
-                // Convert list items from being a string to an object
-                const newItems = textareaAddItems.trim().replace('\r', '').split('\n').map(strItem => ({
-                  id: makeId(),
-                  text: strItem,
-                  checked: false
-                }))
-                this.setState({
-                  items: [...items, ...newItems],
-                  modalAddItemsOpen: false,
-                  textareaAddItems: ''
-                }, () => {
-                  this.saveStateToLocalStorage()
-                })
-              }}>
-                Add them
-              </Button>
-            </div>
-          </div>
-        </Modal>
+          </DialogContent>
+          <DialogActions>
+            <Button variant='contained' color='primary' onClick={() => {
+              this.onAdd(textareaAddItems)
+              this.setState({ modalAddItemsOpen: false, textareaAddItems: '' })
+            }}>
+              Add them
+            </Button>
+          </DialogActions>
+        </Dialog>
         <Snackbar
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           open={snackbarOpen}
