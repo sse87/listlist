@@ -58,7 +58,9 @@ class App extends Component {
       appEditMode: false,
       confirmCounterdeleteAllChecked: 0,
       confirmCounterdeleteAllItems: 0,
-      snackbarOpen: false
+      snackbarOpen: false,
+      modalImportConflictOpen: false,
+      itemsToBeImport: []
     }
 
     this.loadStateFromLocalStorage = this.loadStateFromLocalStorage.bind(this)
@@ -99,22 +101,30 @@ class App extends Component {
     })
   }
 
-  // Still under construction
+  // TODO: Cleanup console logs
   checkForImports () {
     const importString = getQueryVariable('import')
-    if (importString !== false) {
-      console.log('importString:', importString)
-      console.log('parseItems:', parseItems(importString))
-      const newItems = parseItems(importString)
-      if (this.state.items.length === 0 && Array.isArray(newItems)) {
-        console.log('Item loaded from import string')
-        this.setState({ items: newItems }, () => {
-          this.saveStateToLocalStorage().then(() => {
-            // Refresh and drop all query variables like '?import=YTB8...'
-            window.location.href = `${window.location.origin}${window.location.pathname}`
-          })
+    // console.log('importString:', importString)
+    if (importString === false || importString === '') return
+
+    const newItems = parseItems(importString)
+    // console.log('newItems:', newItems)
+    if (!Array.isArray(newItems) || newItems.length === 0) return
+
+    // console.log('current list length:', this.state.items.length)
+    if (this.state.items.length === 0) {
+      // console.log('Item loaded from import string')
+      this.setState({ items: newItems }, () => {
+        this.saveStateToLocalStorage().then(() => {
+          // Refresh and drop all query variables like '?import=YTB8...'
+          window.location.href = `${window.location.origin}${window.location.pathname}`
         })
-      }
+      })
+    } else {
+      this.setState({
+        itemsToBeImport: newItems,
+        modalImportConflictOpen: true
+      })
     }
   }
 
@@ -175,8 +185,12 @@ class App extends Component {
   }
 
   overwriteItems (newItems) {
-    this.setState({ items: newItems }, () => {
-      this.saveStateToLocalStorage()
+    return new Promise(resolve => {
+      this.setState({ items: newItems }, () => {
+        this.saveStateToLocalStorage().then(() => {
+          resolve()
+        })
+      })
     })
   }
 
@@ -190,7 +204,9 @@ class App extends Component {
       appEditMode,
       confirmCounterdeleteAllChecked,
       confirmCounterdeleteAllItems,
-      snackbarOpen
+      snackbarOpen,
+      modalImportConflictOpen,
+      itemsToBeImport
     } = this.state
 
     const menuAppOpen = Boolean(appMenuAnchorEl)
@@ -353,6 +369,42 @@ class App extends Component {
           ContentProps={{ 'aria-describedby': 'message-id' }}
           message={<span id='message-id'>Link copied!</span>}
         />
+        <Dialog
+          open={modalImportConflictOpen}
+          onClose={() => this.setState({ modalImportConflictOpen: false })}
+          aria-labelledby='dialog-title'
+          aria-describedby='dialog-description'
+        >
+          <DialogTitle id='dialog-title'>Import conflict detected</DialogTitle>
+          <DialogContent>
+            <DialogContentText id='dialog-description'>
+              You are trying to import {itemsToBeImport.length} items but there are already {items.length} items on your list. What do you want to do?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button variant='contained' color='primary' onClick={() => {
+              this.overwriteItems([...items, ...itemsToBeImport]).then(() => {
+                this.setState({ modalImportConflictOpen: false }, () => {
+                  window.location.href = `${window.location.origin}${window.location.pathname}`
+                })
+              })
+            }}>
+              Merge lists
+            </Button>
+            <Button variant='contained' color='secondary' onClick={() => {
+              this.overwriteItems(itemsToBeImport).then(() => {
+                this.setState({ modalImportConflictOpen: false }, () => {
+                  window.location.href = `${window.location.origin}${window.location.pathname}`
+                })
+              })
+            }}>
+              Overwrite existing list
+            </Button>
+            <Button variant='contained' color='default' onClick={() => this.setState({ modalImportConflictOpen: false })}>
+              Nothing
+            </Button>
+          </DialogActions>
+        </Dialog>
       </MuiThemeProvider>
     )
   }
