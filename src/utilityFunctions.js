@@ -8,9 +8,9 @@ export const makeId = (length = 10) => (
 )
 
 // Replace non-url-safe characters to more safe ones, replacing '+', '/' and '=' to '.', '_' and '-' respectively
-const makeBase64UrlSafe = str => str.replace('+', '.').replace('/', '_').replace('=', '-')
+const makeBase64UrlSafe = str => str.replace(/\+/g, '.').replace(/\//g, '_').replace(/=/g, '-')
 // Replace the saem url-safe characters back to standard base64 characters
-const makeUrlBase64Safe = str => str.replace('.', '+').replace('_', '/').replace('-', '=')
+const makeUrlBase64Safe = str => str.replace(/\./g, '+').replace(/_/g, '/').replace(/-/g, '=')
 // Base64 characters are 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' and = for padding
 // Last 3 are not safe for URLs
 
