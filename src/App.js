@@ -58,7 +58,8 @@ class App extends Component {
       appEditMode: false,
       confirmCounterdeleteAllChecked: 0,
       confirmCounterdeleteAllItems: 0,
-      snackbarOpen: false
+      snackbarOpen: false,
+      itemsToBeImport: []
     }
 
     this.loadStateFromLocalStorage = this.loadStateFromLocalStorage.bind(this)
@@ -72,6 +73,7 @@ class App extends Component {
     this.onDelete = this.onDelete.bind(this)
     this.onDeleteAllChecked = this.onDeleteAllChecked.bind(this)
     this.onDeleteAllItems = this.onDeleteAllItems.bind(this)
+    this.handleImportConflictClose = this.handleImportConflictClose.bind(this)
   }
 
   componentDidMount () {
@@ -99,22 +101,27 @@ class App extends Component {
     })
   }
 
-  // Still under construction
+  // TODO: Cleanup console logs
   checkForImports () {
     const importString = getQueryVariable('import')
-    if (importString !== false) {
-      console.log('importString:', importString)
-      console.log('parseItems:', parseItems(importString))
-      const newItems = parseItems(importString)
-      if (this.state.items.length === 0 && Array.isArray(newItems)) {
-        console.log('Item loaded from import string')
-        this.setState({ items: newItems }, () => {
-          this.saveStateToLocalStorage().then(() => {
-            // Refresh and drop all query variables like '?import=YTB8...'
-            window.location.href = `${window.location.origin}${window.location.pathname}`
-          })
+    // console.log('importString:', importString)
+    if (importString === false || importString === '') return
+
+    const newItems = parseItems(importString)
+    // console.log('newItems:', newItems)
+    if (!Array.isArray(newItems) || newItems.length === 0) return
+
+    // console.log('current list length:', this.state.items.length)
+    if (this.state.items.length === 0) {
+      // console.log('Item loaded from import string')
+      this.setState({ items: newItems }, () => {
+        this.saveStateToLocalStorage().then(() => {
+          // Refresh and drop all query variables like '?import=YTB8...'
+          window.location.href = `${window.location.origin}${window.location.pathname}`
         })
-      }
+      })
+    } else {
+      this.setState({ itemsToBeImport: newItems })
     }
   }
 
@@ -175,8 +182,19 @@ class App extends Component {
   }
 
   overwriteItems (newItems) {
-    this.setState({ items: newItems }, () => {
-      this.saveStateToLocalStorage()
+    return new Promise(resolve => {
+      this.setState({ items: newItems }, () => {
+        this.saveStateToLocalStorage().then(() => {
+          resolve()
+        })
+      })
+    })
+  }
+
+  handleImportConflictClose () {
+    // Empty itemsToBeImport then drop all query variables
+    this.setState({ itemsToBeImport: [] }, () => {
+      window.location.href = `${window.location.origin}${window.location.pathname}`
     })
   }
 
@@ -190,10 +208,12 @@ class App extends Component {
       appEditMode,
       confirmCounterdeleteAllChecked,
       confirmCounterdeleteAllItems,
-      snackbarOpen
+      snackbarOpen,
+      itemsToBeImport
     } = this.state
 
     const menuAppOpen = Boolean(appMenuAnchorEl)
+    const modalImportConflictOpen = itemsToBeImport.length > 0
 
     return (
       <MuiThemeProvider theme={theme}>
@@ -353,6 +373,40 @@ class App extends Component {
           ContentProps={{ 'aria-describedby': 'message-id' }}
           message={<span id='message-id'>Link copied!</span>}
         />
+        <Dialog
+          open={modalImportConflictOpen}
+          onClose={this.handleImportConflictClose}
+          aria-labelledby='dialog-title'
+          aria-describedby='dialog-description'
+        >
+          <DialogTitle id='dialog-title'>Import conflict detected</DialogTitle>
+          <DialogContent>
+            <DialogContentText id='dialog-description'>
+              You are trying to import {itemsToBeImport.length} items but there are already {items.length} items on your list. What do you want to do?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button variant='contained' color='primary' onClick={() => {
+              this.overwriteItems([...items, ...itemsToBeImport]).then(() => {
+                this.handleImportConflictClose()
+              })
+            }}>
+              Merge
+            </Button>
+            <Button variant='contained' color='secondary' onClick={() => {
+              this.overwriteItems(itemsToBeImport).then(() => {
+                this.handleImportConflictClose()
+              })
+            }}>
+              Overwrite
+            </Button>
+            <Button variant='contained' color='default' style={{ position: 'absolute', left: 4 }} onClick={() => {
+              this.handleImportConflictClose()
+            }}>
+              Cancel
+            </Button>
+          </DialogActions>
+        </Dialog>
       </MuiThemeProvider>
     )
   }
