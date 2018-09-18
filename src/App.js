@@ -73,6 +73,7 @@ class App extends Component {
     this.onDelete = this.onDelete.bind(this)
     this.onDeleteAllChecked = this.onDeleteAllChecked.bind(this)
     this.onDeleteAllItems = this.onDeleteAllItems.bind(this)
+    this.handleImportConflictClose = this.handleImportConflictClose.bind(this)
   }
 
   componentDidMount () {
@@ -187,6 +188,13 @@ class App extends Component {
           resolve()
         })
       })
+    })
+  }
+
+  handleImportConflictClose () {
+    // Empty itemsToBeImport then drop all query variables
+    this.setState({ itemsToBeImport: [] }, () => {
+      window.location.href = `${window.location.origin}${window.location.pathname}`
     })
   }
 
@@ -367,7 +375,7 @@ class App extends Component {
         />
         <Dialog
           open={modalImportConflictOpen}
-          onClose={() => this.setState({ itemsToBeImport: [] })}
+          onClose={this.handleImportConflictClose}
           aria-labelledby='dialog-title'
           aria-describedby='dialog-description'
         >
@@ -380,23 +388,21 @@ class App extends Component {
           <DialogActions>
             <Button variant='contained' color='primary' onClick={() => {
               this.overwriteItems([...items, ...itemsToBeImport]).then(() => {
-                this.setState({ itemsToBeImport: [] }, () => {
-                  window.location.href = `${window.location.origin}${window.location.pathname}`
-                })
+                this.handleImportConflictClose()
               })
             }}>
               Merge
             </Button>
             <Button variant='contained' color='secondary' onClick={() => {
               this.overwriteItems(itemsToBeImport).then(() => {
-                this.setState({ itemsToBeImport: [] }, () => {
-                  window.location.href = `${window.location.origin}${window.location.pathname}`
-                })
+                this.handleImportConflictClose()
               })
             }}>
               Overwrite
             </Button>
-            <Button variant='contained' color='default' style={{ position: 'absolute', left: 4 }} onClick={() => this.setState({ itemsToBeImport: [] })}>
+            <Button variant='contained' color='default' style={{ position: 'absolute', left: 4 }} onClick={() => {
+              this.handleImportConflictClose()
+            }}>
               Cancel
             </Button>
           </DialogActions>
