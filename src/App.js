@@ -182,7 +182,12 @@ class App extends Component {
       <MuiThemeProvider theme={theme}>
         <AppBar position='static' className='mb-5'>
           <Toolbar>
-            <Typography variant='title' color='inherit' style={{ flexGrow: 1 }}>List List</Typography>
+            <Typography
+              variant='title'
+              color='inherit'
+              style={{ flexGrow: 1 }}
+              title={`Version ${window.appVersion}`}
+            >List List</Typography>
             <IconButton
               aria-label='options'
               aria-owns={menuAppOpen ? 'app-options' : null}
