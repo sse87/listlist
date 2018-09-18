@@ -59,7 +59,6 @@ class App extends Component {
       confirmCounterdeleteAllChecked: 0,
       confirmCounterdeleteAllItems: 0,
       snackbarOpen: false,
-      modalImportConflictOpen: false,
       itemsToBeImport: []
     }
 
@@ -121,10 +120,7 @@ class App extends Component {
         })
       })
     } else {
-      this.setState({
-        itemsToBeImport: newItems,
-        modalImportConflictOpen: true
-      })
+      this.setState({ itemsToBeImport: newItems })
     }
   }
 
@@ -205,11 +201,11 @@ class App extends Component {
       confirmCounterdeleteAllChecked,
       confirmCounterdeleteAllItems,
       snackbarOpen,
-      modalImportConflictOpen,
       itemsToBeImport
     } = this.state
 
     const menuAppOpen = Boolean(appMenuAnchorEl)
+    const modalImportConflictOpen = itemsToBeImport.length > 0
 
     return (
       <MuiThemeProvider theme={theme}>
@@ -371,7 +367,7 @@ class App extends Component {
         />
         <Dialog
           open={modalImportConflictOpen}
-          onClose={() => this.setState({ modalImportConflictOpen: false })}
+          onClose={() => this.setState({ itemsToBeImport: [] })}
           aria-labelledby='dialog-title'
           aria-describedby='dialog-description'
         >
@@ -384,7 +380,7 @@ class App extends Component {
           <DialogActions>
             <Button variant='contained' color='primary' onClick={() => {
               this.overwriteItems([...items, ...itemsToBeImport]).then(() => {
-                this.setState({ modalImportConflictOpen: false }, () => {
+                this.setState({ itemsToBeImport: [] }, () => {
                   window.location.href = `${window.location.origin}${window.location.pathname}`
                 })
               })
@@ -393,14 +389,14 @@ class App extends Component {
             </Button>
             <Button variant='contained' color='secondary' onClick={() => {
               this.overwriteItems(itemsToBeImport).then(() => {
-                this.setState({ modalImportConflictOpen: false }, () => {
+                this.setState({ itemsToBeImport: [] }, () => {
                   window.location.href = `${window.location.origin}${window.location.pathname}`
                 })
               })
             }}>
               Overwrite existing list
             </Button>
-            <Button variant='contained' color='default' onClick={() => this.setState({ modalImportConflictOpen: false })}>
+            <Button variant='contained' color='default' onClick={() => this.setState({ itemsToBeImport: [] })}>
               Nothing
             </Button>
           </DialogActions>
