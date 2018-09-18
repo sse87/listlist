@@ -19,8 +19,8 @@ import {
 import {
   DragIndicator as DragIndicatorIcon,
   Edit as EditIcon,
-  Save as SaveIcon,
-  Clear as ClearIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
   Delete as DeleteIcon
 } from '@material-ui/icons'
 
@@ -105,13 +105,13 @@ class ItemItem extends Component {
                 onEdit(item.id, editingText)
                 this.setState({ editingItem: false, editingText: '' })
               }}>
-                <SaveIcon className='mr-2' style={{ fontSize: 20 }} />
+                <CheckIcon className='mr-2' style={{ fontSize: 20 }} />
                 Save
               </Button>
               <Button className='ml-3' variant='contained' size='small' onClick={() => {
                 this.setState({ editingItem: false, editingText: '' })
               }}>
-                <ClearIcon className='mr-2' style={{ fontSize: 20 }} />
+                <CloseIcon className='mr-2' style={{ fontSize: 20 }} />
                 Cancel
               </Button>
             </Grid>
@@ -121,7 +121,6 @@ class ItemItem extends Component {
     )
   }
 }
-// onEdit(item.id)
 
 ItemItem.propTypes = {
   item: PropTypes.object.isRequired,
