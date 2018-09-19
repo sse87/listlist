@@ -52,6 +52,11 @@ export const getQueryVariable = (key) => {
 
 // export const delay = (ms = 1000) => new Promise(resolve => setTimeout(resolve, ms))
 
+export const plural = (nr, singularWord, pluralWord, includeNr = true) => (
+  `${includeNr ? nr + ' ' : ''}${nr === 1 ? singularWord : pluralWord}`
+)
+export const pluralItems = (nr, includeNr = true) => plural(nr, 'item', 'items', includeNr)
+
 // ################################ //
 // ########## Test cases ########## //
 // ################################ //
