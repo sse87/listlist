@@ -37,7 +37,8 @@ import {
   makeId,
   getShareLink,
   parseItems,
-  getQueryVariable
+  getQueryVariable,
+  pluralItems
 } from './utilityFunctions'
 
 const theme = createMuiTheme({
@@ -235,6 +236,7 @@ class App extends Component {
 
     const menuAppOpen = Boolean(appMenuAnchorEl)
     const modalImportConflictOpen = itemsToBeImport.length > 0
+    const isAnyItemsChecked = items.some(item => item.checked)
 
     return (
       <MuiThemeProvider theme={theme}>
@@ -327,19 +329,21 @@ class App extends Component {
             <ListItemIcon><EditIcon /></ListItemIcon>
             <ListItemText inset primary={`${appEditMode ? 'Exit' : 'Enter'} edit mode`} />
           </MenuItem>
-          <MenuItem onClick={() => {
-            if (confirmCounterdeleteAllChecked === 1) {
-              this.onDeleteAllChecked()
-              this.setState({ confirmCounterdeleteAllChecked: 0, appMenuAnchorEl: null })
-            } else {
-              this.setState({ confirmCounterdeleteAllChecked: (confirmCounterdeleteAllChecked + 1) })
-            }
-          }}>
-            <ListItemIcon><DeleteSweepIcon /></ListItemIcon>
-            <ListItemText inset primary={
-              confirmCounterdeleteAllChecked === 0 ? 'Delete checked' : 'Are you sure?'
-            } />
-          </MenuItem>
+          {isAnyItemsChecked &&
+            <MenuItem onClick={() => {
+              if (confirmCounterdeleteAllChecked === 1) {
+                this.onDeleteAllChecked()
+                this.setState({ confirmCounterdeleteAllChecked: 0, appMenuAnchorEl: null })
+              } else {
+                this.setState({ confirmCounterdeleteAllChecked: (confirmCounterdeleteAllChecked + 1) })
+              }
+            }}>
+              <ListItemIcon><DeleteSweepIcon /></ListItemIcon>
+              <ListItemText inset primary={
+                confirmCounterdeleteAllChecked === 0 ? 'Delete all checked' : 'Are you sure?'
+              } />
+            </MenuItem>
+          }
           <MenuItem onClick={() => {
             if (confirmCounterdeleteAllItems === 1) {
               this.onDeleteAllItems()
@@ -403,7 +407,7 @@ class App extends Component {
           }}
           autoHideDuration={4000}
           ContentProps={{ 'aria-describedby': 'message-id' }}
-          message={<span id='message-id'>{itemsBeforeDeletion.length - items.length} items have been deleted</span>}
+          message={<span id='message-id'>{pluralItems(itemsBeforeDeletion.length - items.length)} have been deleted</span>}
           action={[
             <Button
               key='undo'
@@ -436,7 +440,7 @@ class App extends Component {
           <DialogTitle id='dialog-title'>Import conflict detected</DialogTitle>
           <DialogContent>
             <DialogContentText id='dialog-description'>
-              You are trying to import {itemsToBeImport.length} items but there are already {items.length} items on your list. What do you want to do?
+              You are trying to import {pluralItems(itemsToBeImport.length)} but there are already {pluralItems(items.length)} on your list. What do you want to do?
             </DialogContentText>
           </DialogContent>
           <DialogActions>
