@@ -26,7 +26,8 @@ import {
   MoreVert as MoreVertIcon,
   Share as ShareIcon,
   Edit as EditIcon,
-  DeleteSweep as DeleteSweepIcon
+  DeleteSweep as DeleteSweepIcon,
+  Close as CloseIcon
 } from '@material-ui/icons'
 import { arrayMove } from 'react-sortable-hoc'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -58,8 +59,10 @@ class App extends Component {
       appEditMode: false,
       confirmCounterdeleteAllChecked: 0,
       confirmCounterdeleteAllItems: 0,
-      snackbarOpen: false,
-      itemsToBeImport: []
+      snackbarCopiedConfirmOpen: false,
+      snackbarDeletedUndoOpen: false,
+      itemsToBeImport: [],
+      itemsBeforeDeletion: []
     }
 
     this.loadStateFromLocalStorage = this.loadStateFromLocalStorage.bind(this)
@@ -173,12 +176,28 @@ class App extends Component {
   }
 
   onDeleteAllChecked () {
-    const items = this.state.items.filter(item => !item.checked)
-    this.overwriteItems(items)
+    this.setState({
+      itemsBeforeDeletion: this.state.items,
+      snackbarDeletedUndoOpen: true
+    }, () => {
+      const items = this.state.items.filter(item => !item.checked)
+      this.overwriteItems(items)
+    })
   }
 
   onDeleteAllItems () {
-    this.overwriteItems([])
+    this.setState({
+      itemsBeforeDeletion: this.state.items,
+      snackbarDeletedUndoOpen: true
+    }, () => {
+      this.overwriteItems([])
+    })
+  }
+
+  onUndoDeletion () {
+    this.overwriteItems(this.state.itemsBeforeDeletion).then(() => {
+      this.setState({ itemsBeforeDeletion: [] })
+    })
   }
 
   overwriteItems (newItems) {
@@ -208,8 +227,10 @@ class App extends Component {
       appEditMode,
       confirmCounterdeleteAllChecked,
       confirmCounterdeleteAllItems,
-      snackbarOpen,
-      itemsToBeImport
+      snackbarCopiedConfirmOpen,
+      snackbarDeletedUndoOpen,
+      itemsToBeImport,
+      itemsBeforeDeletion
     } = this.state
 
     const menuAppOpen = Boolean(appMenuAnchorEl)
@@ -289,7 +310,7 @@ class App extends Component {
             text={getShareLink(this.state.items)}
             onCopy={(text, result) => {
               if (text !== '' && result) {
-                this.setState({ snackbarOpen: true, appMenuAnchorEl: null })
+                this.setState({ snackbarCopiedConfirmOpen: true, appMenuAnchorEl: null })
               } else {
                 console.log('ERROR - CopyToClipboard.onCopy() - (text, result):', text, result)
                 // TODO: Handle this better, drop the alert and display model with message and link so it can be copied manually
@@ -307,7 +328,7 @@ class App extends Component {
             <ListItemText inset primary={`${appEditMode ? 'Exit' : 'Enter'} edit mode`} />
           </MenuItem>
           <MenuItem onClick={() => {
-            if (confirmCounterdeleteAllChecked === 2) {
+            if (confirmCounterdeleteAllChecked === 1) {
               this.onDeleteAllChecked()
               this.setState({ confirmCounterdeleteAllChecked: 0, appMenuAnchorEl: null })
             } else {
@@ -316,11 +337,11 @@ class App extends Component {
           }}>
             <ListItemIcon><DeleteSweepIcon /></ListItemIcon>
             <ListItemText inset primary={
-              confirmCounterdeleteAllChecked === 0 ? 'Delete checked' : confirmCounterdeleteAllChecked === 1 ? 'Are you sure?' : 'Are you sure sure?'
+              confirmCounterdeleteAllChecked === 0 ? 'Delete checked' : 'Are you sure?'
             } />
           </MenuItem>
           <MenuItem onClick={() => {
-            if (confirmCounterdeleteAllItems === 2) {
+            if (confirmCounterdeleteAllItems === 1) {
               this.onDeleteAllItems()
               this.setState({ confirmCounterdeleteAllItems: 0, appMenuAnchorEl: null })
             } else {
@@ -329,7 +350,7 @@ class App extends Component {
           }}>
             <ListItemIcon><DeleteSweepIcon /></ListItemIcon>
             <ListItemText inset primary={
-              confirmCounterdeleteAllItems === 0 ? 'Delete all' : confirmCounterdeleteAllItems === 1 ? 'Are you sure?' : 'Are you sure sure?'
+              confirmCounterdeleteAllItems === 0 ? 'Delete all' : 'Are you sure?'
             } />
           </MenuItem>
         </Menu>
@@ -364,14 +385,47 @@ class App extends Component {
         </Dialog>
         <Snackbar
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-          open={snackbarOpen}
+          open={snackbarCopiedConfirmOpen}
           onClose={(event, reason) => {
-            if (reason === 'clickaway') { return }
-            this.setState({ snackbarOpen: false })
+            if (reason === 'clickaway') return
+            this.setState({ snackbarCopiedConfirmOpen: false })
           }}
           autoHideDuration={2000}
           ContentProps={{ 'aria-describedby': 'message-id' }}
           message={<span id='message-id'>Link copied!</span>}
+        />
+        <Snackbar
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          open={snackbarDeletedUndoOpen}
+          onClose={(event, reason) => {
+            if (reason === 'clickaway') return
+            this.setState({ snackbarDeletedUndoOpen: false })
+          }}
+          autoHideDuration={4000}
+          ContentProps={{ 'aria-describedby': 'message-id' }}
+          message={<span id='message-id'>{itemsBeforeDeletion.length - items.length} items have been deleted</span>}
+          action={[
+            <Button
+              key='undo'
+              variant='contained'
+              color='secondary'
+              size='small'
+              onClick={() => {
+                this.onUndoDeletion()
+                this.setState({ snackbarDeletedUndoOpen: false })
+              }}
+            >
+              Undo
+            </Button>,
+            <IconButton
+              key='close'
+              aria-label='Close'
+              color='inherit'
+              onClick={() => this.setState({ snackbarDeletedUndoOpen: false })}
+            >
+              <CloseIcon />
+            </IconButton>
+          ]}
         />
         <Dialog
           open={modalImportConflictOpen}
