@@ -25,7 +25,6 @@ import {
   Add as AddIcon,
   MoreVert as MoreVertIcon,
   Share as ShareIcon,
-  Edit as EditIcon,
   DeleteSweep as DeleteSweepIcon,
   Close as CloseIcon
 } from '@material-ui/icons'
@@ -57,7 +56,6 @@ class App extends Component {
       modalAddItemsOpen: false,
       textareaAddItems: '',
       appMenuAnchorEl: null,
-      appEditMode: false,
       confirmCounterdeleteAllChecked: 0,
       confirmCounterdeleteAllItems: 0,
       snackbarCopiedConfirmOpen: false,
@@ -172,8 +170,13 @@ class App extends Component {
   }
 
   onDelete (id) {
-    const items = this.state.items.filter(item => item.id !== id)
-    this.overwriteItems(items)
+    this.setState({
+      itemsBeforeDeletion: this.state.items,
+      snackbarDeletedUndoOpen: true
+    }, () => {
+      const items = this.state.items.filter(item => item.id !== id)
+      this.overwriteItems(items)
+    })
   }
 
   onDeleteAllChecked () {
@@ -225,7 +228,6 @@ class App extends Component {
       modalAddItemsOpen,
       textareaAddItems,
       appMenuAnchorEl,
-      appEditMode,
       confirmCounterdeleteAllChecked,
       confirmCounterdeleteAllItems,
       snackbarCopiedConfirmOpen,
@@ -249,7 +251,7 @@ class App extends Component {
               title={`Version ${window.appVersion}`}
             >List List</Typography>
             <IconButton
-              aria-label='options'
+              aria-label='app options'
               aria-owns={menuAppOpen ? 'app-options' : null}
               aria-haspopup='true'
               onClick={(e) => this.setState({ appMenuAnchorEl: e.currentTarget })}
@@ -286,7 +288,6 @@ class App extends Component {
               onEdit={this.onEdit}
               onDelete={this.onDelete}
               onSortStart={this.onSortStart}
-              appEditMode={appEditMode}
             />
           }
         </div>
@@ -325,10 +326,6 @@ class App extends Component {
               <ListItemText inset primary='Copy share link' />
             </MenuItem>
           </CopyToClipboard>
-          <MenuItem onClick={() => this.setState({ appEditMode: !appEditMode, appMenuAnchorEl: null })}>
-            <ListItemIcon><EditIcon /></ListItemIcon>
-            <ListItemText inset primary={`${appEditMode ? 'Exit' : 'Enter'} edit mode`} />
-          </MenuItem>
           {isAnyItemsChecked &&
             <MenuItem onClick={() => {
               if (confirmCounterdeleteAllChecked === 1) {
@@ -440,7 +437,7 @@ class App extends Component {
           <DialogTitle id='dialog-title'>Import conflict detected</DialogTitle>
           <DialogContent>
             <DialogContentText id='dialog-description'>
-              You are trying to import {pluralItems(itemsToBeImport.length)} but there are already {pluralItems(items.length)} on your list. What do you want to do?
+            You are trying to import {pluralItems(itemsToBeImport.length)} but there are already {pluralItems(items.length)} on your list. What do you want to do?
             </DialogContentText>
           </DialogContent>
           <DialogActions>

@@ -5,7 +5,7 @@ import List from '@material-ui/core/List'
 
 import ItemItem from '../ItemItem'
 
-const ListList = ({ items, sortingItemIndex, onCheck, onEdit, onDelete, onSortStart, onSortEnd, appEditMode }) => {
+const ListList = ({ items, sortingItemIndex, onCheck, onEdit, onDelete, onSortStart, onSortEnd }) => {
   return (
     <SortableList
       items={items}
@@ -15,10 +15,11 @@ const ListList = ({ items, sortingItemIndex, onCheck, onEdit, onDelete, onSortSt
       onDelete={onDelete}
       onSortStart={onSortStart}
       onSortEnd={onSortEnd}
-      appEditMode={appEditMode}
       lockAxis='y'
-      useDragHandle
       useWindowAsScrollContainer
+      transitionDuration={600}
+      pressDelay={100}
+      helperClass='item--active'
     />
   )
 }
@@ -30,20 +31,18 @@ ListList.propTypes = {
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   onSortStart: PropTypes.func.isRequired,
-  onSortEnd: PropTypes.func.isRequired,
-  appEditMode: PropTypes.bool
+  onSortEnd: PropTypes.func.isRequired
 }
 
 ListList.defaultProps = {
   items: [],
-  sortingItemIndex: null,
-  appEditMode: false
+  sortingItemIndex: null
 }
 
 export default ListList
 
 // Wrapper
-const SortableList = SortableContainer(({ items, sortingItemIndex, onCheck, onEdit, onDelete, appEditMode }) => (
+const SortableList = SortableContainer(({ items, sortingItemIndex, onCheck, onEdit, onDelete }) => (
   <List style={{ padding: 0 }}>
     {items.map((item, index) => (
       <ItemItem
@@ -54,7 +53,6 @@ const SortableList = SortableContainer(({ items, sortingItemIndex, onCheck, onEd
         onCheck={onCheck}
         onEdit={onEdit}
         onDelete={onDelete}
-        appEditMode={appEditMode}
       />
     ))}
   </List>

@@ -1,11 +1,9 @@
 import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
-import {
-  SortableElement,
-  SortableHandle
-} from 'react-sortable-hoc'
+import { SortableElement } from 'react-sortable-hoc'
 import {
   ListItem,
+  ListItemIcon,
   ListItemText,
   IconButton,
   MenuItem,
@@ -17,7 +15,7 @@ import {
   Button
 } from '@material-ui/core'
 import {
-  DragIndicator as DragIndicatorIcon,
+  MoreVert as MoreIcon,
   Edit as EditIcon,
   Check as CheckIcon,
   Close as CloseIcon,
@@ -31,15 +29,15 @@ class ItemItem extends Component {
     this.state = {
       editingItem: false,
       editingText: '',
-      deleteConfirmAnchorEl: null
+      itemMenuAnchorEl: null
     }
   }
 
   render () {
-    const { item, isItemActive, onCheck, onEdit, onDelete, appEditMode } = this.props
-    const { editingItem, editingText, deleteConfirmAnchorEl } = this.state
+    const { item, isItemActive, onCheck, onEdit, onDelete } = this.props
+    const { editingItem, editingText, itemMenuAnchorEl } = this.state
 
-    const deleteConfirmOpen = Boolean(deleteConfirmAnchorEl)
+    const itemMenuOpen = Boolean(itemMenuAnchorEl)
 
     return (
       <ListItem
@@ -59,39 +57,33 @@ class ItemItem extends Component {
             }
             onClick={() => onCheck(item.id)}
           />
-          {!appEditMode &&
-            <DragHandle />
-          }
-          {appEditMode &&
-            <Fragment>
-              <IconButton
-                aria-label='edit'
-                onClick={() => this.setState({ editingItem: true, editingText: item.text })}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                aria-label='delete'
-                aria-owns={deleteConfirmOpen ? 'item-menu' : null}
-                aria-haspopup='true'
-                onClick={(e) => this.setState({ deleteConfirmAnchorEl: e.currentTarget })}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Fragment>
-          }
+          <IconButton
+            aria-label='item options'
+            aria-owns={itemMenuOpen ? 'item-menu' : null}
+            aria-haspopup='true'
+            onClick={(e) => this.setState({ itemMenuAnchorEl: e.currentTarget })}
+          >
+            <MoreIcon />
+          </IconButton>
           <Menu
             id='item-menu'
-            anchorEl={deleteConfirmAnchorEl}
-            open={deleteConfirmOpen}
-            onClose={() => this.setState({ deleteConfirmAnchorEl: null })}
+            anchorEl={itemMenuAnchorEl}
+            open={itemMenuOpen}
+            onClose={() => this.setState({ itemMenuAnchorEl: null })}
           >
-            <MenuItem onClick={() => onDelete(item.id)}>Are you sure?</MenuItem>
+            <MenuItem onClick={() => this.setState({ editingItem: true, editingText: item.text, itemMenuAnchorEl: null })}>
+              <ListItemIcon><EditIcon /></ListItemIcon>
+              <ListItemText inset primary='Edit' />
+            </MenuItem>
+            <MenuItem onClick={() => onDelete(item.id)}>
+              <ListItemIcon><DeleteIcon /></ListItemIcon>
+              <ListItemText inset primary='Delete' />
+            </MenuItem>
           </Menu>
         </Fragment>
         }
         {editingItem &&
-          <Grid container>
+          <Grid container className='d-block d-sm-flex'>
             <Grid item style={{ flexGrow: 1 }}>
               <TextField
                 fullWidth
@@ -100,19 +92,19 @@ class ItemItem extends Component {
                 value={editingText}
               />
             </Grid>
-            <Grid item>
-              <Button className='ml-3' variant='contained' size='small' color='primary' onClick={() => {
+            <Grid item className='mt-3 mt-sm-0'>
+              <Button className='ml-2' variant='contained' size='small' color='primary' onClick={() => {
                 onEdit(item.id, editingText)
                 this.setState({ editingItem: false, editingText: '' })
               }}>
-                <CheckIcon className='mr-2' style={{ fontSize: 20 }} />
-                Save
+                <CheckIcon style={{ fontSize: 20 }} />
+                <span className='d-none d-sm-block ml-1'>Save</span>
               </Button>
-              <Button className='ml-3' variant='contained' size='small' onClick={() => {
+              <Button className='ml-2' variant='contained' size='small' onClick={() => {
                 this.setState({ editingItem: false, editingText: '' })
               }}>
-                <CloseIcon className='mr-2' style={{ fontSize: 20 }} />
-                Cancel
+                <CloseIcon style={{ fontSize: 20 }} />
+                <span className='d-none d-sm-block ml-1'>Cancel</span>
               </Button>
             </Grid>
           </Grid>
@@ -127,15 +119,10 @@ ItemItem.propTypes = {
   isItemActive: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  appEditMode: PropTypes.bool
+  onDelete: PropTypes.func.isRequired
 }
 
 ItemItem.defaultProps = {
-  appEditMode: false
 }
 
 export default SortableElement(ItemItem)
-
-// This can be any component you want
-const DragHandle = SortableHandle(() => <DragIndicatorIcon className='cursor-grab' />)
