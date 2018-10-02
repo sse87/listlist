@@ -52,7 +52,7 @@ class ItemItem extends Component {
             primary={
               <Fragment>
                 <Checkbox checked={item.checked} color='primary' />
-                <span style={{ fontWeight: 'bold', textDecoration: (item.checked ? 'line-through' : 'none') }}>{item.text}</span>
+                <span style={{ fontWeight: 'bold', userSelect: 'none', textDecoration: (item.checked ? 'line-through' : 'none') }}>{item.text}</span>
               </Fragment>
             }
             onClick={() => onCheck(item.id)}
