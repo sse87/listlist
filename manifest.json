@@ -49,7 +49,7 @@
     }
   ],
   "scope": "/listlist/",
-  "start_url": "./",
+  "start_url": "/listlist/index.html",
   "display": "standalone",
   "theme_color": "#3f51b5",
   "background_color": "#9fa8da"
