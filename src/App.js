@@ -7,6 +7,7 @@ import {
   Toolbar,
   Typography,
   Button,
+  Fab,
   TextField,
   IconButton,
   Menu,
@@ -43,6 +44,9 @@ import {
 const theme = createMuiTheme({
   palette: {
     primary: indigo
+  },
+  typography: {
+    useNextVariants: true
   }
 })
 
@@ -245,7 +249,7 @@ class App extends Component {
         <AppBar position='static' className='mb-5'>
           <Toolbar>
             <Typography
-              variant='title'
+              variant='h6'
               color='inherit'
               style={{ flexGrow: 1 }}
               title={`Version ${window.appVersion}`}
@@ -292,15 +296,14 @@ class App extends Component {
           }
         </div>
         <Zoom in={!modalAddItemsOpen}>
-          <Button
-            variant='fab'
+          <Fab
             color='primary'
             aria-label='add'
             onClick={() => this.setState({ modalAddItemsOpen: true })}
             style={{ position: 'fixed', bottom: 26, right: 26 }}
           >
             <AddIcon />
-          </Button>
+          </Fab>
         </Zoom>
         <Menu
           id='app-options'
