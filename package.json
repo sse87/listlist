@@ -8,18 +8,18 @@
   },
   "homepage": "https://sse87.github.io/listlist",
   "dependencies": {
-    "@material-ui/core": "^3.9.2",
-    "@material-ui/icons": "^3.0.2",
+    "@material-ui/core": "^4.2.0",
+    "@material-ui/icons": "^4.2.1",
     "prop-types": "^15.7.2",
-    "react": "^16.8.3",
+    "react": "^16.8.6",
     "react-copy-to-clipboard": "^5.0.1",
-    "react-dom": "^16.8.3",
-    "react-scripts": "2.1.5",
-    "react-sortable-hoc": "^1.6.1"
+    "react-dom": "^16.8.6",
+    "react-scripts": "3.0.1",
+    "react-sortable-hoc": "^1.9.1"
   },
   "devDependencies": {
     "gh-pages": "^2.0.1",
-    "standard": "^12.0.1"
+    "standard": "^13.0.2"
   },
   "scripts": {
     "start": "react-scripts start",
